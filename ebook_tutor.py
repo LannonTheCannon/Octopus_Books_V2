@@ -41,7 +41,7 @@ Current Question:
 {question}
 """
 prompt = ChatPromptTemplate.from_template(template)
-model = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+model = ChatOpenAI(model="gpt-4o-mini", temperature=0.3, openai_api_key=openai_key)
 
 rag_chain = (
     prompt
@@ -50,7 +50,7 @@ rag_chain = (
 )
 
 # === STREAMLIT APP SETUP
-load_pdf = st.file_uploader("Please upload your pdf here:", type="pdf", openai_api_key=openai_key)
+load_pdf = st.file_uploader("Please upload your pdf here:", type="pdf")
 
 if load_pdf:
     # Save uploaded file to a temp file
