@@ -17,7 +17,9 @@ def format_chat_history(messages):
     return history
 
 # === CONFIG
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open("credentials.yml"))['openai']
+# os.environ["OPENAI_API_KEY"] = yaml.safe_load(open("credentials.yml"))['openai']
+
+openai_key = st.secrets["OPENAI_API_KEY"]
 
 # === LOAD PDF & SPLIT
 import os
@@ -48,7 +50,7 @@ rag_chain = (
 )
 
 # === STREAMLIT APP SETUP
-load_pdf = st.file_uploader("Please upload your pdf here:", type="pdf")
+load_pdf = st.file_uploader("Please upload your pdf here:", type="pdf", openai_api_key=openai_key)
 
 if load_pdf:
     # Save uploaded file to a temp file
@@ -67,7 +69,7 @@ if load_pdf:
     text_splitter = CharacterTextSplitter(chunk_size=1000)
     chunks = text_splitter.split_documents(documents)
 
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-large", openai_api_key=openai_key)
 
     if not os.path.exists(persist_path):
         vectorstore = Chroma.from_documents(
