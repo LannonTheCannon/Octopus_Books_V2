@@ -17,13 +17,13 @@ def format_chat_history(messages):
     return history
 
 # === CONFIG
-os.environ["OPENAI_API_KEY"] = yaml.safe_load(open("../credentials.yml"))['openai']
+os.environ["OPENAI_API_KEY"] = yaml.safe_load(open("credentials.yml"))['openai']
 
 # === LOAD PDF & SPLIT
 import os
 import tempfile
 
-
+  
 
 # === RAG PROMPT + MODEL
 template = """You are a marketing assistant helping a business owner.

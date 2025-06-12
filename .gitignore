@@ -161,3 +161,4 @@ cython_debug/
 
 .credentials.yml 
 .environment.yml 
+credentials.yml
