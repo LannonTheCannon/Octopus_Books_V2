@@ -9,7 +9,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
+import base64
 import streamlit as st
 import os
 import tempfile
@@ -95,6 +95,15 @@ if load_pdf:
     os.remove(tmp_path)
 
     st.success(f"✅ '{load_pdf.name}' processed successfully!")
+
+        # Display PDF in viewer
+    st.subheader("📄 Preview of your uploaded PDF")
+    base64_pdf = load_pdf.getvalue()
+    b64 = base64.b64encode(base64_pdf).decode()
+
+    pdf_display = f"""
+        <iframe src="data:application/pdf;base64,{b64}" width="100%" height="600px" type="application/pdf"></iframe>
+    """
 
     # === RAG PROMPT ===
     template = """You are a marketing assistant helping a business owner.
