@@ -1,7 +1,7 @@
 import sys
 import pysqlite3
-
 sys.modules["sqlite3"] = pysqlite3
+
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -9,11 +9,47 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-import streamlit as st 
-import yaml
+
+import streamlit as st
 import os
+import tempfile
 
+# === CONFIG ===
+st.set_page_config(page_title="📘 Ebook Tutor", page_icon="📖", layout="wide")
+st.markdown("""
+    <style>
+    body {
+        background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);
+        color: #e2e8f0;
+        font-family: 'Inter', sans-serif;
+    }
+    .stButton > button {
+        background-color: #4f46e5;
+        color: white;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        transition: all 0.2s ease-in-out;
+    }
+    .stButton > button:hover {
+        background-color: #4338ca;
+        transform: scale(1.03);
+    }
+    .uploadedFileName {
+        font-size: 0.9rem;
+        color: #94a3b8;
+        margin-top: 0.5rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
+st.title("📘 DataForge Ebook Tutor")
+st.caption("Ask intelligent questions from your uploaded ebook PDF, powered by GPT-4o + LangChain.")
+st.divider()
+
+# === API KEY ===
+openai_key = st.secrets["OPENAI_API_KEY"]
+
+# === FORMAT CHAT HISTORY ===
 def format_chat_history(messages):
     history = ""
     for msg in messages:
@@ -21,56 +57,19 @@ def format_chat_history(messages):
         history += f"{role}: {msg['content']}\n"
     return history
 
-# === CONFIG
-# os.environ["OPENAI_API_KEY"] = yaml.safe_load(open("credentials.yml"))['openai']
-
-openai_key = st.secrets["OPENAI_API_KEY"]
-
-# === LOAD PDF & SPLIT
-import os
-import tempfile
-
-  
-
-# === RAG PROMPT + MODEL
-template = """You are a marketing assistant helping a business owner.
-Use only the context below and the chat history so far to answer the next question.
-
-Context:
-{context}
-
-Chat History:
-{chat_history}
-
-Current Question:
-{question}
-"""
-prompt = ChatPromptTemplate.from_template(template)
-model = ChatOpenAI(model="gpt-4o-mini", temperature=0.3, openai_api_key=openai_key)
-
-rag_chain = (
-    prompt
-    | model
-    | StrOutputParser()
-)
-
-# === STREAMLIT APP SETUP
-load_pdf = st.file_uploader("Please upload your pdf here:", type="pdf")
+# === FILE UPLOADER ===
+load_pdf = st.file_uploader("📤 Upload your PDF here", type="pdf")
 
 if load_pdf:
-    # Save uploaded file to a temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
         tmp_file.write(load_pdf.read())
         tmp_path = tmp_file.name
 
-    # Use the filename (without extension) as vectorstore folder name
     pdf_name = os.path.splitext(load_pdf.name)[0]
     persist_path = f"../Practice_Folder_V1/data/{pdf_name}"
 
-    # Load and process PDF
     loader = PyPDFLoader(tmp_path)
     documents = loader.load()
-
     text_splitter = CharacterTextSplitter(chunk_size=1000)
     chunks = text_splitter.split_documents(documents)
 
@@ -91,41 +90,57 @@ if load_pdf:
 
     retriever = vectorstore.as_retriever()
 
-    # Optional cleanup
     os.remove(tmp_path)
 
+    st.success(f"✅ '{load_pdf.name}' processed successfully!")
 
-# === SESSION STATE MEMORY
-if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "ai", "content": "Hey there! What would you like to know about the book?"}]
+    # === RAG PROMPT ===
+    template = """You are a marketing assistant helping a business owner.
+Use only the context below and the chat history so far to answer the next question.
 
-# === DISPLAY CHAT HISTORY
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+Context:
+{context}
 
-# === USER INPUT
-if question := st.chat_input("Ask something about the book..."):
-    
+Chat History:
+{chat_history}
 
-    with st.chat_message("human"):
-        st.markdown(question)
-    
-    with st.spinner("Thinking..."):
-        chat_history = format_chat_history(st.session_state.messages)
-        docs = retriever.invoke(question)  # ← do this manually
+Current Question:
+{question}
+"""
+    prompt = ChatPromptTemplate.from_template(template)
+    model = ChatOpenAI(model="gpt-4o-mini", temperature=0.3, openai_api_key=openai_key)
+    rag_chain = prompt | model | StrOutputParser()
 
-        inputs = {
-            "question": question,
-            "context": docs,
-            "chat_history": chat_history
-        }
+    # === SESSION STATE ===
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = [{"role": "ai", "content": "Hey there! What would you like to know about the book?"}]
 
-        response = rag_chain.invoke(inputs)
+    # === CHAT HISTORY DISPLAY ===
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-    with st.chat_message("ai"):
-        st.markdown(response)
+    # === CHAT INPUT ===
+    if question := st.chat_input("Ask something about the book..."):
+        with st.chat_message("human"):
+            st.markdown(question)
 
-    # === SAVE TO MEMORY
-    st.session_state.messages.append({"role": "human", "content": question})
-    st.session_state.messages.append({"role": "ai", "content": response})
+        with st.spinner("Thinking..."):
+            chat_history = format_chat_history(st.session_state.messages)
+            docs = retriever.invoke(question)
+
+            response = rag_chain.invoke({
+                "question": question,
+                "context": docs,
+                "chat_history": chat_history
+            })
+
+        with st.chat_message("ai"):
+            st.markdown(response)
+
+        # Update memory
+        st.session_state.messages.append({"role": "human", "content": question})
+        st.session_state.messages.append({"role": "ai", "content": response})
+
+else:
+    st.info("👆 Start by uploading a PDF to begin.")
