@@ -2,3 +2,4 @@ openai
 langchain-community
 langchain-openai
 pypdf
+chromadb
