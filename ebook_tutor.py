@@ -107,8 +107,8 @@ if load_pdf:
     pdf_display = f"""
         <iframe src="data:application/pdf;base64,{b64}" width="100%" height="600px" type="application/pdf"></iframe>
     """
-    html(pdf_display, height=610)
-
+    st.markdown(pdf_display, unsafe_allow_html=True)
+    
     # === RAG PROMPT ===
     template = """You are a marketing assistant helping a business owner.
 Use only the context below and the chat history so far to answer the next question.
