@@ -1,3 +1,7 @@
+import sys
+import pysqlite3
+
+sys.modules["sqlite3"] = pysqlite3
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -8,6 +12,7 @@ from langchain_core.output_parsers import StrOutputParser
 import streamlit as st 
 import yaml
 import os
+
 
 def format_chat_history(messages):
     history = ""
