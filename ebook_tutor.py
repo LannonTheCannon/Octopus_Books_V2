@@ -99,22 +99,15 @@ if load_pdf:
 
     st.success(f"✅ '{load_pdf.name}' processed successfully!")
 
-#    Display PDF in viewer
+    # Display PDF in viewer
     st.subheader("📄 Preview of your uploaded PDF")
-
     base64_pdf = load_pdf.getvalue()
     b64 = base64.b64encode(base64_pdf).decode()
 
     pdf_display = f"""
-        <iframe 
-            src="data:application/pdf;base64,{b64}" 
-            width="100%" 
-            height="600px"
-            style="border: none;">
-        </iframe>
+        <iframe src="data:application/pdf;base64,{b64}" width="100%" height="600px" type="application/pdf"></iframe>
     """
-
-    html(pdf_display, height=620)
+    html(pdf_display, height=610)
 
     # === RAG PROMPT ===
     template = """You are a marketing assistant helping a business owner.
