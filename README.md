@@ -28,8 +28,8 @@ Ebook Tutor is a Streamlit app powered by LangChain, OpenAI GPT-4o, and ChromaDB
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/ebook-tutor.git
-cd ebook-tutor
+https://github.com/LannonTheCannon/Octopus_Books_V2.git
+cd Octopus_Books_V2
 ```
 
 2. **Create a virtual environment**
