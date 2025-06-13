@@ -42,8 +42,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📘 DataForge Ebook Tutor")
+st.title("📘 Octopus Books")
 st.caption("Ask intelligent questions from your uploaded ebook PDF, powered by GPT-4o + LangChain.")
+st.caption("Ever wanted to talk about your book with someone? Or review the last pages that you read but didn't absorb? OR even creating fan fiction for a soft landing after the book ends..")
+
 st.divider()
 
 # === API KEY ===
